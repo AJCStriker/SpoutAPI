@@ -297,9 +297,83 @@ public class CollisionHelper {
 		//TODO this
 		return null;
 	}
-
+        
+        /**
+         * Takes two ray variables and returns the point of intersection.
+         * 
+         * If the two rays are parallel this function will return null;
+         * 
+         * @param a
+         * @param b
+         * @return 
+         */
 	public static Vector3 getCollision(Ray a, Ray b) {
-		//TODO this
+		if(a.equals(b)){
+		    return a.origin;
+		}
+		//First check if rays are parrallel
+		float xParaCheck = a.direction.getX() / b.direction.getX();
+		float yParaCheck = a.direction.getY() / b.direction.getY();
+		float zParaCheck = a.direction.getZ() / b.direction.getZ();
+		
+		if(xParaCheck == yParaCheck && yParaCheck == zParaCheck){
+			//Rays are parallel
+			return null;
+		}else{
+			//s = (ea - ya - bd + bx)/(gb-ha)
+			// This formula was refined by AJCStriker and Samkio to find s where
+			//R1 = (d, e, f + s(g,h,i)
+			//R2 = (x, y, z) + t(a, b, c)
+			float ea = a.origin.getY() * b.direction.getX();
+			float ya = b.origin.getY() * b.direction.getX();
+			float bd = b.direction.getY() * a.origin.getX();
+			float bx = b.direction.getY() * b.origin.getX();
+			float gb = a.direction.getX() * b.direction.getY();
+			float ha = a.direction.getY() * b.direction.getX();
+			float topHalf = ea - ya - bd + bx;
+			float bottomHalf = gb - ha;
+			float s = topHalf / bottomHalf;
+			float t = (a.origin.getX() + (s * a.direction.getX()) - b.origin.getX()) / b.direction.getX();
+
+			//Test z coordinate to see if lines intersect
+			//z + tc = f + si
+			float zTestLeftSide = b.origin.getX() + (t * b.direction.getZ());
+			float zTestRightSide = a.origin.getZ() + (s * a.direction.getZ());
+
+			if(zTestLeftSide == zTestRightSide){
+
+				// Lines intersect
+				//Redundancy checks and calculate return
+				//x + at = d + sg
+				float xPointLeft = b.origin.getX() + (t * b.direction.getX());
+				float xPointRight = a.origin.getX() + (s * a.direction.getX());
+
+				if(xPointLeft == xPointRight){
+
+					// z + tc = f + si
+					float yPointLeft = b.origin.getY() + (t * b.direction.getY());
+					float yPointRight = a.origin.getY() + (s * a.direction.getY());
+
+					if(yPointLeft == yPointRight){
+
+						if(t >= 0 && s >= 0){
+							//Rays are intersecting
+							return new Vector3(zTestLeftSide, xPointLeft, yPointLeft);
+						}else{
+							//Intersect is behind the origin
+							return null;
+						}
+					}
+				}
+
+			}else{
+				//do not intersect
+				return null;
+			}
+
+
+		}
+
 		return null;
 	}
 
